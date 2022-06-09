@@ -9,6 +9,7 @@ from pymongo import ReturnDocument
 from model.mixin.asyncable import result2bool
 
 class Content(EmbeddedDocument):
+    """具体的评价内容"""
     comment = StringField(verbose_name='你的体验')
     score = FloatField(verbose_name='学分数量')
     scoring = StringField(verbose_name='给分情况')
@@ -18,13 +19,7 @@ class Content(EmbeddedDocument):
     intro = StringField(verbose_name='课程内容')
     type = StringField(verbose_name='课程性质')
 
-
-class Post(Document, Asyncable):
-    """一条评价记录"""
-    course = StringField(required=True, verbose_name='课程完整名称')
-    teacher = StringField(required=True, unique_with='course', verbose_name='任课教师')
-    content = EmbeddedDocumentListField(Content)
-
+class Topic(Asyncable):
     @classmethod
     async def atrychk(cls, course, teacher, *args, **kwargs):
         """尝试找一个课"""
@@ -49,3 +44,17 @@ class Post(Document, Asyncable):
     async def aunchk(cls, course, teacher, *args, **kwargs):
         """根据主键删一个文档"""
         return result2bool(await cls._aget_collection().delete_one({'course': course, 'teacher': teacher}, *args, **kwargs))
+
+class Contrib(Document, Asyncable):
+    """用户投稿，只是collection不同"""
+    course = StringField(required=True, verbose_name='课程完整名称')
+    teacher = StringField(required=True, unique_with='course', verbose_name='任课教师')
+    content = EmbeddedDocumentField(Content) # 注意不是list
+
+
+class Post(Document, Topic):
+    """管理员批准展示的一条教师-课程容器"""
+    course = StringField(required=True, verbose_name='课程完整名称')
+    teacher = StringField(required=True, unique_with='course', verbose_name='任课教师')
+    content = EmbeddedDocumentListField(Content)
+    

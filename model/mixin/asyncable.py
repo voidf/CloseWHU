@@ -72,6 +72,11 @@ class Asyncable:
     async def aupdate_one(cls, *args, **kwargs):
         """调用本集合的update_one方法，返回一个UpdateResult"""
         return result2bool(await cls._aget_collection().update_one(*args, **kwargs))
+
+    @classmethod
+    async def adelete_one(cls, *args, **kwargs):
+        """调用本集合的delete_one方法，返回一个UpdateResult"""
+        return result2bool(await cls._aget_collection().delete_one(*args, **kwargs))
     
     @classmethod
     async def aupd(cls, pk, **kwargs):
