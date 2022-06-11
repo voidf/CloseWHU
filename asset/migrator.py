@@ -124,6 +124,11 @@ for i in qnodes:
             filled.add(rk)
             if rk == 'teacher':
                 setattr(parsed, 'teacher', txt)
+            
+            elif rk == 'score':
+                setattr(parsed.content, rk, float(txt))
+            elif rk == 'material':
+                setattr(parsed.content, rk, [txt])
             else:
                 setattr(parsed.content, rk, txt)
                 
@@ -132,9 +137,8 @@ for i in qnodes:
     if filled:
         contribs.append(parsed)
 print(len(contribs))
-disconnect()
-connect(host='')
-for i in contribs:
+for p, i in enumerate(contribs):
+    print(p)
     i.save()
 
 
