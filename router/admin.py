@@ -78,7 +78,10 @@ async def get_contrib_list():
 
 @admin_router.get('/contrib/first')
 async def get_first_contrib():
-    return (await Contrib.afind_one()).to_mongo()
+    c = (await Contrib.afind_one())
+    if not c:
+        raise HTTPException(404)
+    return c.to_mongo()
 
 @admin_router.get('/contrib/{cid}')
 async def get_specific_contrib(cid: str):
@@ -87,20 +90,7 @@ async def get_specific_contrib(cid: str):
         raise HTTPException(404)
     return c.to_mongo()
 
-@admin_router.put('/contrib/first')
-async def pass_first_contrib():
-    """通过第一个投稿，如果教师id和课程id不存在则会新建"""
-    contrib: Contrib = await Contrib.afind_one()
-    p: Post = await Post.achk(contrib.course, contrib.teacher)
-    p.content.append(contrib.content)
-    await p.asave()
-    await contrib.adestroy()
-    return p.to_mongo()
-
-@admin_router.put('/contrib/{cid}')
-async def pass_specific_contrib(cid: str):
-    """通过指定id的投稿"""
-    contrib: Contrib = (await Contrib.atrychk(cid))
+async def _pass_contrib(contrib: Contrib):
     if not contrib:
         raise HTTPException(404)
     p: Post = await Post.achk(contrib.course, contrib.teacher)
@@ -108,6 +98,20 @@ async def pass_specific_contrib(cid: str):
     await p.asave()
     await contrib.adestroy()
     return p.to_mongo()
+
+
+@admin_router.put('/contrib/first')
+async def pass_first_contrib():
+    """通过第一个投稿，如果教师id和课程id不存在则会新建"""
+    contrib: Contrib = await Contrib.afind_one()
+    return (await _pass_contrib(contrib))
+
+@admin_router.put('/contrib/{cid}')
+async def pass_specific_contrib(cid: str):
+    """通过指定id的投稿"""
+    contrib: Contrib = (await Contrib.atrychk(cid))
+    return (await _pass_contrib(contrib))
+
 
 @admin_router.delete('/contrib/first')
 async def reject_first_contrib():
@@ -119,9 +123,29 @@ async def reject_specific_contrib(cid: str):
     """拒掉指定id的投稿"""
     return bool(await Contrib.aunchk(cid))
 
+async def _modify_contrib(contrib: Contrib, c: CourseModel, m: ContentModel):
+    if not contrib:
+        raise HTTPException(404)
+    contrib.course = c.course
+    contrib.teacher = c.teacher
+    for k, v in m.dict(exclude_unset=True).items():
+        setattr(contrib.content, k, v)
+    return (await contrib.asave()).to_mongo()
+
+
+@admin_router.post('/contrib/first')
+async def modify_first_contrib(c: CourseModel, m: ContentModel):
+    contrib: Contrib = await Contrib.afind_one()
+    return (await _modify_contrib(contrib, c, m))
+
+@admin_router.post('/contrib/{cid}')
+async def modify_specific_contrib(cid: str, c: CourseModel, m: ContentModel):
+    contrib: Contrib = (await Contrib.atrychk(cid))
+    return (await _modify_contrib(contrib, c, m))
 
 @admin_router.post('/contrib')
 async def new_contrib(c: CourseModel, m: ContentModel):
+    """新建投稿"""
     return (await Contrib._aget_collection().find_one_and_update(
         {'course': c.course, 'teacher': c.teacher},
         {

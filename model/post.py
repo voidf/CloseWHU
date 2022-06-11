@@ -48,7 +48,7 @@ class Topic(Asyncable):
 class Contrib(Document, Asyncable):
     """用户投稿，只是collection不同"""
     course = StringField(required=True, verbose_name='课程完整名称')
-    teacher = StringField(required=True, unique_with='course', verbose_name='任课教师')
+    teacher = StringField(required=True, verbose_name='任课教师')
     content = EmbeddedDocumentField(Content) # 注意不是list
 
 
