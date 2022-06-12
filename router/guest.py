@@ -14,11 +14,37 @@ guest_router = APIRouter(
 
 from .admin import CourseModel, ContentModel
 
+
+
 @guest_router.get('/post')
-async def find_course(course: str, teacher: str):
-    p = (await Post.atrychk(course, teacher))
-    if not p: raise HTTPException(404)
-    return p.to_mongo()
+async def find_course(course: str=None, teacher: str=None):
+    if course and teacher:
+        p = (await Post.atrychk(course, teacher))
+        if not p: raise HTTPException(404)
+        return p.to_mongo()
+    elif course:
+        return [i.to_mongo() for i in
+            (await Post.afind({'course': course}))
+        ]
+    elif teacher:
+        return [i.to_mongo() for i in
+            (await Post.afind({'teacher': teacher}))
+        ]
+    else:
+        res = await Post.aaggregate_list([{
+            '$project':{
+                'teacher':1, 'course':1, '_id': 0, 'cnt': {'$size': '$content'}
+            }
+        }])
+        # logger.debug(res)
+        return res
+        # logger.debug(await Post.afind(projection={'teacher':1, 'course':1}))
+        # logger.debug([i.to_mongo() for i in
+        #     (await Post.afind(projection={'teacher':1, 'course':1}))
+        # ])
+        # return [i.to_mongo() for i in
+        #     (await Post.afind(projection={'teacher':1, 'course':1}))
+        # ]
 
 @guest_router.get('/post/{idx}')
 async def find_course(course: str, teacher: str, idx: int):

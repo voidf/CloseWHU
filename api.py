@@ -17,7 +17,8 @@ from fastapi.exception_handlers import http_exception_handler
 from pydantic.json import ENCODERS_BY_TYPE
 from bson.objectid import ObjectId
 ENCODERS_BY_TYPE[ObjectId] = lambda x: str(x)
-
+from fastapi.routing import Mount
+from fastapi.staticfiles import StaticFiles
 
 def preload() -> FastAPI:
     """多worker fork出来前先进行一些通用东西的初始化"""
@@ -54,6 +55,13 @@ def preload() -> FastAPI:
 
     from router import v1_router
     app.include_router(v1_router)
+    app.mount(
+        '/',
+        StaticFiles(directory='build'),
+        name='frontend',
+    )
+
+        # Mount('/', app=StaticFiles(directory='build')))
     
     return app
 

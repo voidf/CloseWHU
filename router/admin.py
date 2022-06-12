@@ -41,7 +41,7 @@ async def remove_individual_course(c: CourseModel):
 
 @admin_router.get('/post')
 async def get_course_list():
-    return [i.to_mongo() for i in (await L(Post.objects))]
+    return [i.to_mongo() for i in (await Post.afind())]
 
 
 class ContentModel(BaseModel):
@@ -74,7 +74,7 @@ async def modify_individual_course(c: CourseModel, son: List[ContentModel]):
 
 @admin_router.get('/contrib')
 async def get_contrib_list():
-    return [i.to_mongo() for i in (await L(Contrib.objects))]
+    return [i.to_mongo() for i in (await Contrib.afind())]
 
 @admin_router.get('/contrib/first')
 async def get_first_contrib():
