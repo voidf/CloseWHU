@@ -15,6 +15,7 @@ class Content(EmbeddedDocument):
     scoring = StringField(verbose_name='给分情况')
     material = ListField(StringField(), verbose_name='推荐教材')
     appendix = StringField(verbose_name='补充说明')
+    rating = IntField(verbose_name='总体评分')
     examination = StringField(verbose_name='考核方式')
     intro = StringField(verbose_name='课程内容')
     type = StringField(verbose_name='课程性质')
